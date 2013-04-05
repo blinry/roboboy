@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">RoboBoy</string>
     <string name="menu_search">Search...</string>
+    <string name="menu_sync">Sync</string>
 </resources>

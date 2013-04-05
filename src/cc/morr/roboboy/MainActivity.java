@@ -14,6 +14,7 @@ import android.widget.ListView;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MenuInflater;
 
 import org.eclipse.jgit.api.*;
@@ -56,7 +57,48 @@ public class MainActivity extends ListActivity
         localPath = "/mnt/sdcard/wiki";
         remotePath = "git@morr.cc:wiki";
         //deleteRecursive(new File(localPath));
+    }
 
+    void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory())
+            for (File child : fileOrDirectory.listFiles())
+                deleteRecursive(child);
+
+        fileOrDirectory.delete();
+    }
+
+    void listDir(File f){
+        File[] files = f.listFiles();
+        fileList.clear();
+        for (File file : files){
+            if (file.getName() != ".git")
+                fileList.add(file.getName());
+        }
+        java.util.Collections.sort(fileList);
+
+        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_sync:
+                sync();
+                Toast.makeText(this, "synced", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void sync() {
         try {
             localRepo = new FileRepository(localPath + "/.git");
             String branch = localRepo.getBranch();
@@ -83,32 +125,6 @@ public class MainActivity extends ListActivity
         }
 
         listDir(new File(localPath));
-    }
-
-    void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory())
-            for (File child : fileOrDirectory.listFiles())
-                deleteRecursive(child);
-
-        fileOrDirectory.delete();
-    }
-
-    void listDir(File f){
-        File[] files = f.listFiles();
-        fileList.clear();
-        for (File file : files){
-            fileList.add(file.getName());
-        }
-        java.util.Collections.sort(fileList);
-
-        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_activity, menu);
-        return true;
     }
 
     protected void onListItemClick(ListView l, View v, int position, long id) {

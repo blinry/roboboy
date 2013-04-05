@@ -4,4 +4,7 @@
           android:title="@string/menu_search"
           android:showAsAction="ifRoom"
           android:actionViewClass="android.widget.SearchView" />
+    <item android:id="@+id/menu_sync"
+          android:title="@string/menu_sync"
+          android:showAsAction="ifRoom" />
 </menu>
