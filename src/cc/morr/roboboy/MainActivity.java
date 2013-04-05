@@ -2,10 +2,19 @@ package cc.morr.roboboy;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.List;
+import java.util.ArrayList;
 
-import android.app.Activity;
+import android.app.ListActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.content.Intent;
+import android.net.Uri;
+import android.view.Menu;
+import android.view.MenuInflater;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
@@ -19,11 +28,13 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import com.jcraft.jsch.Session;
 
-public class MainActivity extends Activity
+public class MainActivity extends ListActivity
 {
     private String localPath, remotePath;
     private Repository localRepo;
     private Git git;
+
+    private List<String> fileList = new ArrayList<String>();
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -42,9 +53,9 @@ public class MainActivity extends Activity
             }
         });
 
-        localPath = getDir("reponew", MODE_PRIVATE).getPath();
-        remotePath = "git@morr.cc:wiki2";
-        deleteRecursive(getDir("reponew", MODE_PRIVATE));
+        localPath = "/mnt/sdcard/wiki";
+        remotePath = "git@morr.cc:wiki";
+        //deleteRecursive(new File(localPath));
 
         try {
             localRepo = new FileRepository(localPath + "/.git");
@@ -71,6 +82,7 @@ public class MainActivity extends Activity
             }
         }
 
+        listDir(new File(localPath));
     }
 
     void deleteRecursive(File fileOrDirectory) {
@@ -79,5 +91,30 @@ public class MainActivity extends Activity
                 deleteRecursive(child);
 
         fileOrDirectory.delete();
+    }
+
+    void listDir(File f){
+        File[] files = f.listFiles();
+        fileList.clear();
+        for (File file : files){
+            fileList.add(file.getName());
+        }
+        java.util.Collections.sort(fileList);
+
+        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity, menu);
+        return true;
+    }
+
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        Intent intent = new Intent(Intent.ACTION_EDIT);
+        Uri uri = Uri.parse("file://"+localPath+"/"+fileList.get(position));
+        intent.setDataAndType(uri, "text/plain");
+        startActivity(intent);
     }
 }
