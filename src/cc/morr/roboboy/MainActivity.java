@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.SearchView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.content.Intent;
+import android.content.Context;
 import android.net.Uri;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +22,7 @@ import android.view.MenuInflater;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.storage.file.FileRepository;
@@ -54,27 +57,35 @@ public class MainActivity extends ListActivity
             }
         });
 
-        localPath = "/mnt/sdcard/wiki";
+        //localPath = "/mnt/sdcard/wiki";
+        localPath = getDir("wikiblabber", Context.MODE_WORLD_WRITEABLE).getPath();
+        deleteRecursive(new File(localPath));
+        localPath = getDir("wikiblabber", Context.MODE_WORLD_WRITEABLE).getPath();
+
+        System.out.println(localPath);
         remotePath = "git@morr.cc:wiki";
-        //deleteRecursive(new File(localPath));
+
+        listDir(new File(localPath));
     }
 
     void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory())
+        if (fileOrDirectory.isDirectory()) {
             for (File child : fileOrDirectory.listFiles())
                 deleteRecursive(child);
-
-        fileOrDirectory.delete();
+            fileOrDirectory.delete();
+        }
     }
 
     void listDir(File f){
-        File[] files = f.listFiles();
-        fileList.clear();
-        for (File file : files){
-            if (file.getName() != ".git")
-                fileList.add(file.getName());
+        if (f.isDirectory()) {
+            File[] files = f.listFiles();
+            fileList.clear();
+            for (File file : files){
+                if (! file.getName().equals(".git"))
+                    fileList.add(file.getName());
+            }
+            java.util.Collections.sort(fileList);
         }
-        java.util.Collections.sort(fileList);
 
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
     }
@@ -106,8 +117,8 @@ public class MainActivity extends ListActivity
             git = new Git(localRepo);
 
             git.fetch().call();
+            git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
             System.out.println("supa");
-
         } catch (Exception e) {
             System.out.println("ex, cloning");
             try {
@@ -119,9 +130,30 @@ public class MainActivity extends ListActivity
             try {
                 String branch = localRepo.getBranch();
                 System.out.println(branch);
+                git = new Git(localRepo);
             } catch (IOException e2) {
                 System.out.println("oh");
             }
+        }
+
+        try {
+            if (localRepo.getRef("phone") == null)
+                git.checkout().setCreateBranch(true).setName("phone").call();
+            else
+                git.checkout().setName("phone").call();
+        } catch (GitAPIException e) {
+            throw new RuntimeException();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+
+        try {
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("Autocommit RoboBoy").call();
+            git.push().add("phone").setForce(true).call();
+            System.out.println("push ok");
+        } catch (GitAPIException e) {
+            throw new RuntimeException();
         }
 
         listDir(new File(localPath));
