@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
+import android.preference.PreferenceManager;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
@@ -34,7 +35,7 @@ import com.jcraft.jsch.Session;
 
 public class MainActivity extends ListActivity
 {
-    private String localPath, remotePath;
+    private String localPath;
     private Repository localRepo;
     private Git git;
 
@@ -61,7 +62,6 @@ public class MainActivity extends ListActivity
         //localPath = getDir("hoho", Context.MODE_WORLD_WRITEABLE).getPath();
 
         System.out.println(localPath);
-        remotePath = "git@morr.cc:wiki";
 
         listDir(new File(localPath));
     }
@@ -101,13 +101,18 @@ public class MainActivity extends ListActivity
             git = new Git(localRepo);
 
             git.fetch().call();
-            git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+            try {
+                git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+            } catch (Exception e) {
+                Toast.makeText(this, "master diverged, plese merge on a proper computer.", Toast.LENGTH_SHORT).show();
+            }
             System.out.println("supa");
         } catch (Exception e) {
             System.out.println("ex, cloning");
             try {
                 deleteRecursive(new File(localPath));
-                Git.cloneRepository().setURI(remotePath).setDirectory(new File(localPath)).call();
+                System.out.println("repo: "+PreferenceManager.getDefaultSharedPreferences(this).getString("repository", ""));
+                Git.cloneRepository().setURI(PreferenceManager.getDefaultSharedPreferences(this).getString("repository", "")).setDirectory(new File(localPath)).call();
             } catch (GitAPIException e2) {
                 System.out.println("apiex");
                 e2.printStackTrace(System.out);
