@@ -3,4 +3,6 @@
     <string name="app_name">RoboBoy</string>
     <string name="menu_search">Search...</string>
     <string name="menu_sync">Sync</string>
+    <string name="menu_delete">Del</string>
+    <string name="menu_preferences">Pref</string>
 </resources>

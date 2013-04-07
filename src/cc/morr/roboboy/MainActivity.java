@@ -50,44 +50,20 @@ public class MainActivity extends ListActivity
             public void configure(Host hc, Session session) {
                 session.setConfig("StrictHostKeyChecking", "no");
                 try {
-                getJSch(hc, FS.DETECTED).addIdentity("/mnt/sdcard/.ssh/id_rsa");
+                    getJSch(hc, FS.DETECTED).addIdentity("/mnt/sdcard/.ssh/id_rsa");
                 } catch (Exception e) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("Could not find private key");
                 }
             }
         });
 
-        //localPath = "/mnt/sdcard/wiki";
-        localPath = getDir("wikiblabber", Context.MODE_WORLD_WRITEABLE).getPath();
-        deleteRecursive(new File(localPath));
-        localPath = getDir("wikiblabber", Context.MODE_WORLD_WRITEABLE).getPath();
+        localPath = "/mnt/sdcard/wiki";
+        //localPath = getDir("hoho", Context.MODE_WORLD_WRITEABLE).getPath();
 
         System.out.println(localPath);
         remotePath = "git@morr.cc:wiki";
 
         listDir(new File(localPath));
-    }
-
-    void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory()) {
-            for (File child : fileOrDirectory.listFiles())
-                deleteRecursive(child);
-            fileOrDirectory.delete();
-        }
-    }
-
-    void listDir(File f){
-        if (f.isDirectory()) {
-            File[] files = f.listFiles();
-            fileList.clear();
-            for (File file : files){
-                if (! file.getName().equals(".git"))
-                    fileList.add(file.getName());
-            }
-            java.util.Collections.sort(fileList);
-        }
-
-        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
     }
 
     @Override
@@ -103,6 +79,14 @@ public class MainActivity extends ListActivity
             case R.id.menu_sync:
                 sync();
                 Toast.makeText(this, "synced", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.menu_delete:
+                deleteRecursive(new File(localPath));
+                Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.menu_preferences:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -122,7 +106,8 @@ public class MainActivity extends ListActivity
         } catch (Exception e) {
             System.out.println("ex, cloning");
             try {
-            Git.cloneRepository().setURI(remotePath).setDirectory(new File(localPath)).call();
+                deleteRecursive(new File(localPath));
+                Git.cloneRepository().setURI(remotePath).setDirectory(new File(localPath)).call();
             } catch (GitAPIException e2) {
                 System.out.println("apiex");
                 e2.printStackTrace(System.out);
@@ -165,4 +150,27 @@ public class MainActivity extends ListActivity
         intent.setDataAndType(uri, "text/plain");
         startActivity(intent);
     }
+
+    private void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles())
+                deleteRecursive(child);
+        }
+        fileOrDirectory.delete();
+    }
+
+    private void listDir(File f){
+        if (f.isDirectory()) {
+            File[] files = f.listFiles();
+            fileList.clear();
+            for (File file : files){
+                if (! file.getName().equals(".git"))
+                    fileList.add(file.getName());
+            }
+            java.util.Collections.sort(fileList);
+        }
+
+        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
+    }
+
 }

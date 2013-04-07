@@ -3,6 +3,11 @@
     package="cc.morr.roboboy"
     android:versionCode="1"
     android:versionName="1.0">
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true" />
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
         <activity android:name="MainActivity"
             android:label="@string/app_name"
@@ -11,6 +16,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name="SettingsActivity"
+            android:theme="@android:style/Theme.Holo.Light">
         </activity>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
