@@ -235,6 +235,8 @@ public class MainActivity extends ListActivity
     }
 
     private void listDir(File f){
+        fileList.clear();
+
         if (f.isDirectory()) {
             File[] files = f.listFiles();
             fileList.clear();
