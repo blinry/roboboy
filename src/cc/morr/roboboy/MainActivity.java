@@ -62,7 +62,7 @@ public class MainActivity extends ListActivity
             }
         });
 
-        localPath = "/mnt/sdcard/wiki";
+        localPath = "/mnt/sdcard/wiki/";
         //localPath = getDir("kähä", Context.MODE_WORLD_WRITEABLE).getPath();
 
         System.out.println(localPath);
@@ -85,11 +85,22 @@ public class MainActivity extends ListActivity
                 return true;
             case R.id.menu_delete:
                 deleteRecursive(new File(localPath));
-                Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Deleted local repository", Toast.LENGTH_SHORT).show();
+                listDir(new File(localPath));
                 return true;
             case R.id.menu_preferences:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
+                return true;
+            case R.id.menu_new:
+                File newFile = new File(localPath+Long.toString(System.currentTimeMillis()));
+                Log.d("RoboBoy", newFile.getPath());
+                try {
+                    newFile.createNewFile();
+                    listDir(new File(localPath));
+                } catch(IOException e) {
+                    Toast.makeText(this, "Could not create new page", Toast.LENGTH_SHORT).show();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -149,7 +160,7 @@ public class MainActivity extends ListActivity
         } catch (CheckoutConflictException e) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    Toast.makeText(context, "master on remote diverged, please merge on a real computer", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "master on remote diverged, please merge on a real computer.", Toast.LENGTH_LONG).show();
                 }
             });
         } catch (GitAPIException e) {

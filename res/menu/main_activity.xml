@@ -15,4 +15,7 @@
     <item android:id="@+id/menu_preferences"
           android:title="@string/menu_preferences"
           android:showAsAction="never" />
+    <item android:id="@+id/menu_new"
+          android:title="@string/menu_new"
+          android:showAsAction="never" />
 </menu>
