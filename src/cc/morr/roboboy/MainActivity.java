@@ -44,6 +44,8 @@ public class MainActivity extends ListActivity
 
     private List<String> fileList = new ArrayList<String>();
 
+    public final static String PAGE_NAME = "cc.morr.roboboy.PAGE_NAME";
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -216,9 +218,10 @@ public class MainActivity extends ListActivity
     }
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
-        Intent intent = new Intent(Intent.ACTION_EDIT);
-        Uri uri = Uri.parse("file://"+localPath+"/"+fileList.get(position));
-        intent.setDataAndType(uri, "text/plain");
+        Intent intent = new Intent(this, PageActivity.class);
+        intent.putExtra(PAGE_NAME, fileList.get(position));
+        //Uri uri = Uri.parse("file://"+localPath+"/"+fileList.get(position));
+        //intent.setDataAndType(uri, "text/plain");
         startActivity(intent);
     }
 
