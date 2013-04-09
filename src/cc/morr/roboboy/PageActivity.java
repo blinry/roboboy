@@ -15,6 +15,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.app.ActionBar;
 
+import android.content.Context;
+
 import android.content.Intent;
 
 public class PageActivity extends Activity {
@@ -27,7 +29,7 @@ public class PageActivity extends Activity {
         setContentView(R.layout.page);
 
         String pageName = getIntent().getStringExtra(MainActivity.PAGE_NAME);
-        filename = MainActivity.LOCAL_PATH+pageName;
+        filename = getDir("wiki", Context.MODE_WORLD_WRITEABLE).getPath()+"/"+pageName;
 
         editText = (EditText)findViewById(R.id.page_text);
 

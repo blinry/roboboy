@@ -45,7 +45,6 @@ public class MainActivity extends ListActivity
     private List<String> fileList = new ArrayList<String>();
 
     public final static String PAGE_NAME = "cc.morr.roboboy.PAGE_NAME";
-    public final static String LOCAL_PATH = "/mnt/sdcard/wiki/";
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -65,8 +64,7 @@ public class MainActivity extends ListActivity
             }
         });
 
-        localPath = LOCAL_PATH;
-        //localPath = getDir("kähä", Context.MODE_WORLD_WRITEABLE).getPath();
+        localPath = getDir("wiki", Context.MODE_WORLD_WRITEABLE).getPath()+"/";
 
         System.out.println(localPath);
 
