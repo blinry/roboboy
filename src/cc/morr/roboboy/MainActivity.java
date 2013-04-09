@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
@@ -28,9 +29,10 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
-
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
+
 import com.jcraft.jsch.Session;
 
 public class MainActivity extends ListActivity
@@ -38,6 +40,7 @@ public class MainActivity extends ListActivity
     private String localPath;
     private Repository localRepo;
     private Git git;
+    private Context context;
 
     private List<String> fileList = new ArrayList<String>();
 
@@ -46,6 +49,7 @@ public class MainActivity extends ListActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        context = this;
 
         SshSessionFactory.setInstance(new JschConfigSessionFactory() {
             public void configure(Host hc, Session session) {
@@ -59,7 +63,7 @@ public class MainActivity extends ListActivity
         });
 
         localPath = "/mnt/sdcard/wiki";
-        //localPath = getDir("hoho", Context.MODE_WORLD_WRITEABLE).getPath();
+        //localPath = getDir("kähä", Context.MODE_WORLD_WRITEABLE).getPath();
 
         System.out.println(localPath);
 
@@ -78,7 +82,6 @@ public class MainActivity extends ListActivity
         switch (item.getItemId()) {
             case R.id.menu_sync:
                 sync();
-                Toast.makeText(this, "synced", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.menu_delete:
                 deleteRecursive(new File(localPath));
@@ -93,38 +96,28 @@ public class MainActivity extends ListActivity
         }
     }
 
-    private void sync() {
+    private void cloneIt() {
         try {
-            localRepo = new FileRepository(localPath + "/.git");
-            String branch = localRepo.getBranch();
-            System.out.println(branch);
-            git = new Git(localRepo);
-
-            git.fetch().call();
-            try {
-                git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
-            } catch (Exception e) {
-                Toast.makeText(this, "master diverged, plese merge on a proper computer.", Toast.LENGTH_SHORT).show();
-            }
-            System.out.println("supa");
-        } catch (Exception e) {
-            System.out.println("ex, cloning");
-            try {
-                deleteRecursive(new File(localPath));
-                System.out.println("repo: "+PreferenceManager.getDefaultSharedPreferences(this).getString("repository", ""));
-                Git.cloneRepository().setURI(PreferenceManager.getDefaultSharedPreferences(this).getString("repository", "")).setDirectory(new File(localPath)).call();
-            } catch (GitAPIException e2) {
-                System.out.println("apiex");
-                e2.printStackTrace(System.out);
-            }
-            try {
-                String branch = localRepo.getBranch();
-                System.out.println(branch);
-                git = new Git(localRepo);
-            } catch (IOException e2) {
-                System.out.println("oh");
-            }
+            Git.cloneRepository().setURI(PreferenceManager.getDefaultSharedPreferences(this).getString("repository", "")).setDirectory(new File(localPath)).call();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
         }
+        Log.d("RoboBoy", "clone done");
+    }
+
+    private void init() {
+        File localRepoDir = new File(localPath + "/.git");
+        if (! localRepoDir.isDirectory()) {
+            Log.d("RoboBoy", "need to clone");
+            cloneIt();
+        }
+        try {
+            localRepo = new FileRepository(localRepoDir);
+        } catch (IOException e) {
+            Log.d("RoboBoy", "repo creation failed");
+            e.printStackTrace();
+        }
+        git = new Git(localRepo);
 
         try {
             if (localRepo.getRef("phone") == null)
@@ -132,21 +125,83 @@ public class MainActivity extends ListActivity
             else
                 git.checkout().setName("phone").call();
         } catch (GitAPIException e) {
-            throw new RuntimeException();
+            e.printStackTrace();
         } catch (IOException e) {
-            throw new RuntimeException();
+            e.printStackTrace();
+        }
+
+        Log.d("RoboBoy", "init done");
+    }
+
+    private void fetch() {
+        try {
+            git.fetch().call();
+        } catch (GitAPIException e) {
+            Log.d("RoboBoy", "fetch failed");
+            e.printStackTrace();
+        }
+        Log.d("RoboBoy", "fetch done");
+    }
+
+    private void merge() {
+        try {
+            git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+        } catch (CheckoutConflictException e) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    Toast.makeText(context, "master on remote diverged, please merge on a real computer", Toast.LENGTH_LONG).show();
+                }
+            });
+        } catch (GitAPIException e) {
+            Log.d("RoboBoy", "merge failed: git");
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.d("RoboBoy", "merge failed: io");
+            e.printStackTrace();
+        }
+        Log.d("RoboBoy", "merge done");
+    }
+
+    private void commit() {
+        try {
+            git.add().addFilepattern(".").call();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
         }
 
         try {
-            git.add().addFilepattern(".").call();
-            git.commit().setMessage("Autocommit RoboBoy").call();
-            git.push().add("phone").setForce(true).call();
-            System.out.println("push ok");
+            git.commit().setMessage("Sync from RoboBoy").call();
         } catch (GitAPIException e) {
-            throw new RuntimeException();
+            e.printStackTrace();
         }
+        Log.d("RoboBoy", "commit done");
+    }
 
-        listDir(new File(localPath));
+    private void push() {
+        try {
+            git.push().add("phone").setForce(true).call();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        }
+        Log.d("RoboBoy", "push done");
+    }
+
+    private void sync() {
+        new Thread(new Runnable() {
+            public void run() {
+                init();
+                fetch();
+                merge();
+                commit();
+                push();
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(context, "\"synced\"", Toast.LENGTH_SHORT).show();
+                        listDir(new File(localPath));
+                    }
+                });
+            }
+        }).start();
     }
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
