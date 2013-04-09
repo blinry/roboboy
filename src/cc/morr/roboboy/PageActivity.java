@@ -1,5 +1,9 @@
 package cc.morr.roboboy;
 
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.EditText;
@@ -17,13 +21,19 @@ public class PageActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.page);
 
+        String pageName = getIntent().getStringExtra(MainActivity.PAGE_NAME);
+
         editText = (EditText)findViewById(R.id.page_text);
 
-        String pageName = getIntent().getStringExtra(MainActivity.PAGE_NAME);
-        editText.setText(pageName);
+        try {
+            editText.setText(new Scanner(new File(MainActivity.LOCAL_PATH+pageName)).useDelimiter("\\Z").next());
+        } catch (FileNotFoundException e) {
+            //TODO
+        }
 
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(pageName);
     }
 @Override
     public boolean onOptionsItemSelected(MenuItem item) {
