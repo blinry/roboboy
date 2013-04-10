@@ -21,7 +21,9 @@
             </intent-filter>
         </activity>
         <activity android:name="PageActivity"
-            android:theme="@android:style/Theme.Holo.Light">
+            android:theme="@android:style/Theme.Holo.Light"
+            android:windowSoftInputMode="stateHidden"
+            >
         </activity>
         <activity android:name="SettingsActivity"
             android:theme="@android:style/Theme.Holo.Light">
