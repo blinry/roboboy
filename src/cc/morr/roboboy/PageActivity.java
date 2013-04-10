@@ -43,7 +43,6 @@ public class PageActivity extends Activity {
 
         try {
             String text = readFile(filename);
-            System.out.println(text);
             editText.setText(text);
         } catch (FileNotFoundException e) {
             Toast.makeText(this, "Could not read page", Toast.LENGTH_LONG).show();

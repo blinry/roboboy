@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
+import android.app.ActionBar;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -14,6 +15,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.content.Intent;
 import android.content.Context;
+import android.text.TextWatcher;
+import android.text.Editable;
 import android.net.Uri;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -71,12 +74,32 @@ public class MainActivity extends ListActivity
         System.out.println(localPath);
 
         listDir(new File(localPath));
+
+        ListView listView = (ListView)findViewById(android.R.id.list);
+        listView.setTextFilterEnabled(true);
+
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_activity, menu);
+
+        SearchView searchView = (SearchView)(menu.findItem(R.id.menu_search)).getActionView();
+        searchView.setIconifiedByDefault(false);
+        searchView.setMaxWidth(400);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            public boolean onQueryTextChange(String newText) {
+                ((ArrayAdapter)MainActivity.this.getListAdapter()).getFilter().filter(newText);
+                return false;
+            }
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -123,24 +146,24 @@ public class MainActivity extends ListActivity
                     git = new Git(localRepo);
 
                     if (localRepo.getRef("phone") == null)
-                        git.checkout().setCreateBranch(true).setName("phone").call();
+            git.checkout().setCreateBranch(true).setName("phone").call();
                     else
-                        git.checkout().setName("phone").call();
+            git.checkout().setName("phone").call();
 
-                    git.fetch().call();
-                    git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
-                    git.add().addFilepattern(".").call();
-                    if (! git.status().call().isClean()) {
-                        git.commit().setMessage("Sync from RoboBoy").call();
-                        git.push().add("phone").setForce(true).call();
-                    }
+        git.fetch().call();
+        git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+        git.add().addFilepattern(".").call();
+        if (! git.status().call().isClean()) {
+            git.commit().setMessage("Sync from RoboBoy").call();
+            git.push().add("phone").setForce(true).call();
+        }
 
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, "\"synced\"", Toast.LENGTH_SHORT).show();
-                            listDir(new File(localPath));
-                        }
-                    });
+        runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(context, "\"synced\"", Toast.LENGTH_SHORT).show();
+                listDir(new File(localPath));
+            }
+        });
                 } catch (CheckoutConflictException e) {
                     runOnUiThread(new Runnable() {
                         public void run() {
@@ -168,7 +191,7 @@ public class MainActivity extends ListActivity
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
         Intent intent = new Intent(this, PageActivity.class);
-        intent.putExtra(PAGE_NAME, fileList.get(position));
+        intent.putExtra(PAGE_NAME, (String)getListAdapter().getItem(position));
         //Uri uri = Uri.parse("file://"+localPath+"/"+fileList.get(position));
         //intent.setDataAndType(uri, "text/plain");
         startActivity(intent);
