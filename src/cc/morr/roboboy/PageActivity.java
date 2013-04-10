@@ -16,6 +16,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.ScrollView;
 
+import android.text.util.Linkify;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -53,6 +55,8 @@ public class PageActivity extends Activity {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(pageName);
+
+        Linkify.addLinks(editText, Linkify.ALL);
     }
 
     @Override
