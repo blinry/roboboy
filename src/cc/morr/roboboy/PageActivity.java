@@ -30,7 +30,7 @@ public class PageActivity extends Activity {
         setContentView(R.layout.page);
 
         String pageName = getIntent().getStringExtra(MainActivity.PAGE_NAME);
-        filename = getDir("wiki", Context.MODE_WORLD_WRITEABLE).getPath()+"/"+pageName;
+        filename = MainActivity.LOCAL_PATH+pageName;
 
         editText = (EditText)findViewById(R.id.page_text);
         ScrollView scrollView = (ScrollView)findViewById(R.id.page_scroll_view);
