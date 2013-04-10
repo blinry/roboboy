@@ -2,8 +2,13 @@ package cc.morr.roboboy;
 
 import java.util.Scanner;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.MappedByteBuffer;
+import java.nio.charset.Charset;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -37,8 +42,12 @@ public class PageActivity extends Activity {
         scrollView.setSmoothScrollingEnabled(true);
 
         try {
-            editText.setText(new Scanner(new File(filename)).useDelimiter("\\Z").next());
+            String text = readFile(filename);
+            System.out.println(text);
+            editText.setText(text);
         } catch (FileNotFoundException e) {
+            Toast.makeText(this, "Could not read page", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
             Toast.makeText(this, "Could not read page", Toast.LENGTH_LONG).show();
         }
 
@@ -83,6 +92,18 @@ public class PageActivity extends Activity {
             Toast.makeText(this, "Saved page", Toast.LENGTH_SHORT).show();
         } catch (FileNotFoundException e) {
             Toast.makeText(this, "Could not save page", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static String readFile(String path) throws IOException {
+        FileInputStream stream = new FileInputStream(new File(path));
+        try {
+            FileChannel fc = stream.getChannel();
+            MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+            /* Instead of using default, pass in a decoder. */
+            return Charset.defaultCharset().decode(bb).toString();
+        } finally {
+            stream.close();
         }
     }
 }

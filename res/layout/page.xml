@@ -12,8 +12,6 @@
         android:typeface="monospace"
         android:textSize="12sp"
         android:gravity="top"
-        android:background="@android:color/transparent"
         android:scrollbars="vertical"
-        android:fadingEdge="vertical"
         android:inputType="textMultiLine" />
 </ScrollView>
