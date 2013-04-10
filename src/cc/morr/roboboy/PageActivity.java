@@ -56,7 +56,7 @@ public class PageActivity extends Activity {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(pageName);
 
-        Linkify.addLinks(editText, Linkify.ALL);
+        Linkify.addLinks(editText, Linkify.EMAIL_ADDRESSES | Linkify.WEB_URLS);
     }
 
     @Override
