@@ -9,6 +9,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.Scanner;
@@ -74,7 +75,8 @@ public class PageActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case android.R.id.home:
-            super.onBackPressed();
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -124,7 +126,17 @@ public class PageActivity extends Activity {
                 if (! file.getName().equals(".git"))
                     fileList.add(file.getName());
             }
-            java.util.Collections.sort(fileList);
+            java.util.Collections.sort(fileList, new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    if (o1.length() > o2.length()) {
+                        return -1;
+                    } else if (o1.length() < o2.length()) {
+                        return 1;
+                    }
+                    return o1.compareTo(o2);
+                } 
+            });
         }
 
         String pattern = "(";
