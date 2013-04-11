@@ -85,7 +85,7 @@ public class MainActivity extends ListActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_activity, menu);
+        inflater.inflate(R.menu.main, menu);
 
         SearchView searchView = (SearchView)(menu.findItem(R.id.menu_search)).getActionView();
         searchView.setIconifiedByDefault(false);
