@@ -9,6 +9,8 @@ import android.app.ActionBar;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -130,6 +132,8 @@ public class MainActivity extends ListActivity {
         new Thread(new Runnable() {
             public void run() {
                 try {
+                    final String message;
+
                     File localRepoDir = new File(localPath + "/.git");
                     if (! localRepoDir.isDirectory()) {
                         Git.cloneRepository().setURI(PreferenceManager.getDefaultSharedPreferences(context).getString("repository", "")).setDirectory(new File(localPath)).call();
@@ -138,22 +142,34 @@ public class MainActivity extends ListActivity {
                     localRepo = new FileRepository(localRepoDir);
                     git = new Git(localRepo);
 
-                    if (localRepo.getRef("phone") == null)
+                    if (localRepo.getRef("phone") == null) {
                         git.checkout().setCreateBranch(true).setName("phone").call();
-                    else
+                    } else {
                         git.checkout().setName("phone").call();
+                    }
 
-                    git.fetch().call();
-                    git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+                    if (isNetworkAvailable()) {
+                        git.fetch().call();
+                        git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+                    }
+
                     git.add().addFilepattern(".").call();
+
                     if (! git.status().call().isClean()) {
-                        git.commit().setMessage("Sync from RoboBoy").call();
-                        git.push().add("phone").setForce(true).call();
+                        if (isNetworkAvailable()) {
+                            git.commit().setMessage("Sync from RoboBoy").call();
+                            git.push().add("phone").setForce(true).call();
+                            message = "Synced to server";
+                        } else {
+                            message = "No network, committed locally";
+                        }
+                    } else {
+                        message = "Everything up to date";
                     }
 
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(context, "\"synced\"", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
                             listDir(new File(localPath));
                         }
                     });
@@ -210,5 +226,12 @@ public class MainActivity extends ListActivity {
         }
 
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager 
+            = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }
