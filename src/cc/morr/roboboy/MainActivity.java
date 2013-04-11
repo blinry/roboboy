@@ -61,7 +61,7 @@ public class MainActivity extends ListActivity
             public void configure(Host hc, Session session) {
                 session.setConfig("StrictHostKeyChecking", "no");
                 try {
-                    getJSch(hc, FS.DETECTED).addIdentity("/mnt/sdcard/.ssh/id_rsa");
+                    getJSch(hc, FS.DETECTED).addIdentity("/sdcard/.ssh/phone");
                 } catch (Exception e) {
                     throw new RuntimeException("Could not find private key");
                 }
