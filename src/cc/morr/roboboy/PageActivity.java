@@ -8,6 +8,9 @@ import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.MappedByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 import java.util.Scanner;
 
 import android.app.ActionBar;
@@ -32,6 +35,9 @@ public class PageActivity extends Activity {
         setContentView(R.layout.page);
 
         String pageName = getIntent().getStringExtra(MainActivity.PAGE_NAME);
+        if (pageName == null) {
+            pageName = getIntent().getData().toString().substring(18);
+        }
         filename = MainActivity.LOCAL_PATH+pageName;
 
         editText = (EditText)findViewById(R.id.page_text);
@@ -52,6 +58,9 @@ public class PageActivity extends Activity {
         actionBar.setTitle(pageName);
 
         Linkify.addLinks(editText, Linkify.EMAIL_ADDRESSES | Linkify.WEB_URLS);
+        Pattern pagesPattern = Pattern.compile(getPagesPattern(new File(MainActivity.LOCAL_PATH)));
+        String wikiViewURL = "cc.morr.roboboy://";
+        Linkify.addLinks(editText, pagesPattern, wikiViewURL);
     }
 
     @Override
@@ -102,5 +111,40 @@ public class PageActivity extends Activity {
         } finally {
             stream.close();
         }
+    }
+
+    private String getPagesPattern(File f) {
+        List<String> fileList = new ArrayList<String>();
+        fileList.clear();
+
+        if (f.isDirectory()) {
+            File[] files = f.listFiles();
+            fileList.clear();
+            for (File file : files){
+                if (! file.getName().equals(".git"))
+                    fileList.add(file.getName());
+            }
+            java.util.Collections.sort(fileList);
+        }
+
+        String pattern = "(";
+        pattern = pattern.concat(join(fileList,"|")).concat(")");
+        System.out.println(pattern);
+        return pattern;
+    }
+
+    static private String join(List<String> list, String conjunction)
+    {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (String item : list)
+        {
+            if (first)
+                first = false;
+            else
+                sb.append(conjunction);
+            sb.append(item);
+        }
+        return sb.toString();
     }
 }
