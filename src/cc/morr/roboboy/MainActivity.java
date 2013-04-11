@@ -1,45 +1,43 @@
 package cc.morr.roboboy;
 
-import java.io.IOException;
 import java.io.File;
-import java.util.List;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.ActionBar;
 import android.app.ListActivity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.SearchView;
-import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.content.Intent;
-import android.content.Context;
-import android.text.TextWatcher;
-import android.text.Editable;
-import android.net.Uri;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MenuInflater;
-import android.preference.PreferenceManager;
-import android.util.Log;
+import android.widget.SearchView;
+import android.widget.Toast;
 
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
-import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.errors.*;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.util.FS;
 
 import com.jcraft.jsch.Session;
 
-public class MainActivity extends ListActivity
-{
+public class MainActivity extends ListActivity {
     private String localPath;
     private Repository localRepo;
     private Git git;
@@ -51,8 +49,7 @@ public class MainActivity extends ListActivity
     public final static String LOCAL_PATH = "/sdcard/wiki/";
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         context = this;
@@ -68,10 +65,7 @@ public class MainActivity extends ListActivity
             }
         });
 
-        //localPath = getDir("wiki", Context.MODE_WORLD_WRITEABLE).getPath()+"/";
         localPath = LOCAL_PATH;
-
-        System.out.println(localPath);
 
         listDir(new File(localPath));
 
@@ -120,7 +114,6 @@ public class MainActivity extends ListActivity
                 return true;
             case R.id.menu_new:
                 File newFile = new File(localPath+Long.toString(System.currentTimeMillis()));
-                Log.d("RoboBoy", newFile.getPath());
                 try {
                     newFile.createNewFile();
                     listDir(new File(localPath));
@@ -146,24 +139,24 @@ public class MainActivity extends ListActivity
                     git = new Git(localRepo);
 
                     if (localRepo.getRef("phone") == null)
-            git.checkout().setCreateBranch(true).setName("phone").call();
+                        git.checkout().setCreateBranch(true).setName("phone").call();
                     else
-            git.checkout().setName("phone").call();
+                        git.checkout().setName("phone").call();
 
-        git.fetch().call();
-        git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
-        git.add().addFilepattern(".").call();
-        if (! git.status().call().isClean()) {
-            git.commit().setMessage("Sync from RoboBoy").call();
-            git.push().add("phone").setForce(true).call();
-        }
+                    git.fetch().call();
+                    git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+                    git.add().addFilepattern(".").call();
+                    if (! git.status().call().isClean()) {
+                        git.commit().setMessage("Sync from RoboBoy").call();
+                        git.push().add("phone").setForce(true).call();
+                    }
 
-        runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(context, "\"synced\"", Toast.LENGTH_SHORT).show();
-                listDir(new File(localPath));
-            }
-        });
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(context, "\"synced\"", Toast.LENGTH_SHORT).show();
+                            listDir(new File(localPath));
+                        }
+                    });
                 } catch (CheckoutConflictException e) {
                     runOnUiThread(new Runnable() {
                         public void run() {
@@ -192,8 +185,6 @@ public class MainActivity extends ListActivity
     protected void onListItemClick(ListView l, View v, int position, long id) {
         Intent intent = new Intent(this, PageActivity.class);
         intent.putExtra(PAGE_NAME, (String)getListAdapter().getItem(position));
-        //Uri uri = Uri.parse("file://"+localPath+"/"+fileList.get(position));
-        //intent.setDataAndType(uri, "text/plain");
         startActivity(intent);
     }
 
@@ -205,7 +196,7 @@ public class MainActivity extends ListActivity
         fileOrDirectory.delete();
     }
 
-    private void listDir(File f){
+    private void listDir(File f) {
         fileList.clear();
 
         if (f.isDirectory()) {
@@ -220,5 +211,4 @@ public class MainActivity extends ListActivity
 
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileList));
     }
-
 }
