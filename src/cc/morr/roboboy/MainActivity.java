@@ -31,6 +31,7 @@ import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
@@ -121,7 +122,7 @@ public class MainActivity extends ListActivity {
                 Toast.makeText(this, "Deleted local repository", Toast.LENGTH_SHORT).show();
                 listDir(new File(localPath));
                 return true;
-            case R.id.menu_preferences:
+            case R.id.menu_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
@@ -164,24 +165,34 @@ public class MainActivity extends ListActivity {
 
                     git.add().addFilepattern(".").call();
 
+                    boolean needToPush = false;
+
                     if (! git.status().call().isClean()) {
                         git.commit().setMessage("Sync from RoboBoy").setAuthor(PreferenceManager.getDefaultSharedPreferences(context).getString("user_name", ""), PreferenceManager.getDefaultSharedPreferences(context).getString("user_email", "")).call();
                         message += "Committed. ";
+                        needToPush = true;
                     } else {
                         message = "Clean. ";
                     }
 
                     if (isNetworkAvailable()) {
                         git.fetch().call();
-                        git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
-                        message += "Fetched/merged. ";
+                        ObjectId headBeforeMerge = localRepo.resolve("HEAD");
+                        MergeResult mergeResult = git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+                        if (headBeforeMerge.equals(mergeResult.getNewHead())) {
+                            message += "Nothing new on server. ";
+                        } else {
+                            message += "Fetched. ";
+                        }
                     }
 
-                    if (isNetworkAvailable()) {
-                        git.push().add("phone").call();
-                        message += "Pushed. ";
-                    } else {
-                        message += "No network. ";
+                    if (needToPush) {
+                        if (isNetworkAvailable()) {
+                            git.push().add("phone").call();
+                            message += "Pushed. ";
+                        } else {
+                            message += "No network. ";
+                        }
                     }
 
                     message2 = message;
