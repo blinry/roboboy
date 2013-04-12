@@ -2,6 +2,7 @@ package cc.morr.roboboy;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,6 +125,7 @@ public class MainActivity extends ListActivity {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+                /*
             case R.id.menu_new:
                 File newFile = new File(localPath+Long.toString(System.currentTimeMillis()));
                 try {
@@ -133,6 +135,7 @@ public class MainActivity extends ListActivity {
                     Toast.makeText(this, "Could not create new page", Toast.LENGTH_SHORT).show();
                 }
                 return true;
+                */
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -162,7 +165,7 @@ public class MainActivity extends ListActivity {
                     git.add().addFilepattern(".").call();
 
                     if (! git.status().call().isClean()) {
-                        git.commit().setMessage("Sync from RoboBoy").call();
+                        git.commit().setMessage("Sync from RoboBoy").setAuthor(PreferenceManager.getDefaultSharedPreferences(context).getString("user_name", ""), PreferenceManager.getDefaultSharedPreferences(context).getString("user_email", "")).call();
                         message += "Committed. ";
                     } else {
                         message = "Clean. ";

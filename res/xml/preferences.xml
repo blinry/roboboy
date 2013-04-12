@@ -12,4 +12,16 @@
         android:dialogTitle="Enter SSH private key location"
         android:defaultValue="/sdcard/.ssh/phone"
         />
+    <EditTextPreference
+        android:key="user_name"
+        android:title="Git user name"
+        android:dialogTitle="Enter name that will be used for commits"
+        android:defaultValue="RoboBoy"
+        />
+    <EditTextPreference
+        android:key="user_email"
+        android:title="Git email address"
+        android:dialogTitle="Enter email address that will be used for commits"
+        android:defaultValue="roboboy\@localhost"
+        />
 </PreferenceScreen>
