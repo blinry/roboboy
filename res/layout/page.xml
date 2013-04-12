@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <TextView 
+    <EditText 
         android:id="@+id/page_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -13,6 +13,5 @@
         android:textSize="12sp"
         android:gravity="top"
         android:scrollbars="vertical"
-        android:editable="true"
-        android:inputType="textMultiLine" />
+        android:inputType="textMultiLine|textNoSuggestions" />
 </ScrollView>

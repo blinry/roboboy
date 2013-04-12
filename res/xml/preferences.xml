@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="Preferences">
-
-    <PreferenceCategory android:title="Server">
-
-        <EditTextPreference
-            android:key="repository"
-            android:title="Repository"
-            android:dialogTitle="Enter repository URL"
-            />
-
-    </PreferenceCategory>
+    <EditTextPreference
+        android:key="repository"
+        android:title="Repository URL"
+        android:dialogTitle="Enter repository URL"
+        />
+    <EditTextPreference
+        android:key="key_location"
+        android:title="SSH key location"
+        android:dialogTitle="Enter SSH private key location"
+        android:defaultValue="/sdcard/.ssh/phone"
+        />
 </PreferenceScreen>

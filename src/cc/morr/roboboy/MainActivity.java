@@ -60,9 +60,13 @@ public class MainActivity extends ListActivity {
             public void configure(Host hc, Session session) {
                 session.setConfig("StrictHostKeyChecking", "no");
                 try {
-                    getJSch(hc, FS.DETECTED).addIdentity("/sdcard/.ssh/phone");
+                    getJSch(hc, FS.DETECTED).addIdentity(PreferenceManager.getDefaultSharedPreferences(context).getString("key_location", ""));
                 } catch (Exception e) {
-                    throw new RuntimeException("Could not find private key");
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(context, "Could not find SSH key", Toast.LENGTH_LONG).show();
+                        }
+                    });
                 }
             }
         });
@@ -76,6 +80,12 @@ public class MainActivity extends ListActivity {
 
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
+
+        if (PreferenceManager.getDefaultSharedPreferences(context).getString("repository", "") == "") {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     @Override
