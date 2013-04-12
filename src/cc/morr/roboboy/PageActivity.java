@@ -23,12 +23,12 @@ import android.text.util.Linkify;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
 public class PageActivity extends Activity {
-    EditText editText;
+    TextView editText;
     String filename;
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class PageActivity extends Activity {
         }
         filename = MainActivity.LOCAL_PATH+pageName;
 
-        editText = (EditText)findViewById(R.id.page_text);
+        editText = (TextView)findViewById(R.id.page_text);
         ScrollView scrollView = (ScrollView)findViewById(R.id.page_scroll_view);
         scrollView.setSmoothScrollingEnabled(true);
 
