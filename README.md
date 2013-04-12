@@ -38,3 +38,11 @@ RoboBoy is distributed in the hope that it will be useful, but WITHOUT ANY WARRA
 See LICENSE for a copy of the GNU General Public License.
 
     Copyright (C) 2013  Sebastian Morr <sebastian@morr.cc>
+
+Credits
+-------
+
+- Icon: [Tomboy](http://projects.gnome.org/tomboy/), Alex Graveley, LGPLv2.1
+- Libraries
+    - [jGit](http://www.eclipse.org/jgit/), jGit contributors, Eclipse Distribution License - v 1.0
+    - [JSch](http://www.jcraft.com/jsch/), Atsuhiko Yamanaka, Modified BSD License
