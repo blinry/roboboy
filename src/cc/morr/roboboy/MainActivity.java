@@ -95,7 +95,7 @@ public class MainActivity extends ListActivity {
 
         SearchView searchView = (SearchView)(menu.findItem(R.id.menu_search)).getActionView();
         searchView.setIconifiedByDefault(false);
-        searchView.setMaxWidth(400);
+        searchView.setMaxWidth(500);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             public boolean onQueryTextChange(String newText) {
                 ((ArrayAdapter)MainActivity.this.getListAdapter()).getFilter().filter(newText);
@@ -142,7 +142,8 @@ public class MainActivity extends ListActivity {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    final String message;
+                    String message = "";
+                    final String message2;
 
                     File localRepoDir = new File(localPath + "/.git");
                     if (! localRepoDir.isDirectory()) {
@@ -158,35 +159,40 @@ public class MainActivity extends ListActivity {
                         git.checkout().setName("phone").call();
                     }
 
-                    if (isNetworkAvailable()) {
-                        git.fetch().call();
-                        git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
-                    }
-
                     git.add().addFilepattern(".").call();
 
                     if (! git.status().call().isClean()) {
-                        if (isNetworkAvailable()) {
-                            git.commit().setMessage("Sync from RoboBoy").call();
-                            git.push().add("phone").setForce(true).call();
-                            message = "Synced to server";
-                        } else {
-                            message = "No network, committed locally";
-                        }
+                        git.commit().setMessage("Sync from RoboBoy").call();
+                        message += "Committed. ";
                     } else {
-                        message = "Everything up to date";
+                        message = "Clean. ";
                     }
+
+                    if (isNetworkAvailable()) {
+                        git.fetch().call();
+                        git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
+                        message += "Fetched/merged. ";
+                    }
+
+                    if (isNetworkAvailable()) {
+                        git.push().add("phone").call();
+                        message += "Pushed. ";
+                    } else {
+                        message += "No network. ";
+                    }
+
+                    message2 = message;
 
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, message2, Toast.LENGTH_SHORT).show();
                             listDir(new File(localPath));
                         }
                     });
                 } catch (CheckoutConflictException e) {
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(context, "Sync: Conflict error", Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Sync: Conflict. Please merge on a real computer.", Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (GitAPIException e) {

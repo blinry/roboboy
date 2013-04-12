@@ -98,7 +98,6 @@ public class PageActivity extends Activity {
             out = new PrintWriter(filename);
             out.print(editText.getText());
             out.close();
-            Toast.makeText(this, "Saved page", Toast.LENGTH_SHORT).show();
         } catch (FileNotFoundException e) {
             Toast.makeText(this, "Could not save page", Toast.LENGTH_LONG).show();
         }
