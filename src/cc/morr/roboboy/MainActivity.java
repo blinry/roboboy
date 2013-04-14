@@ -10,9 +10,11 @@ import android.app.ActionBar;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -27,24 +29,10 @@ import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
-import org.eclipse.jgit.api.errors.*;
-import org.eclipse.jgit.api.errors.CheckoutConflictException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepository;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
-import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.util.FS;
-
-import com.jcraft.jsch.Session;
-
 public class MainActivity extends ListActivity {
+    private Wiki wiki;
+
     private String localPath;
-    private Repository localRepo;
-    private Git git;
     private Context context;
 
     private List<String> fileList = new ArrayList<String>();
@@ -58,22 +46,13 @@ public class MainActivity extends ListActivity {
         setContentView(R.layout.main);
         context = this;
 
-        SshSessionFactory.setInstance(new JschConfigSessionFactory() {
-            public void configure(Host hc, Session session) {
-                session.setConfig("StrictHostKeyChecking", "no");
-                try {
-                    getJSch(hc, FS.DETECTED).addIdentity(PreferenceManager.getDefaultSharedPreferences(context).getString("key_location", ""));
-                } catch (Exception e) {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, "Could not find SSH key", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
-            }
-        });
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 
         localPath = LOCAL_PATH;
+
+        wiki = new Wiki(localPath, pref.getString("user_name", ""), pref.getString("user_email", ""));
+        wiki.setKeyLocation(pref.getString("key_location", ""));
+        wiki.setRemoteURL(pref.getString("repository", ""));
 
         listDir(new File(localPath));
 
@@ -115,7 +94,7 @@ public class MainActivity extends ListActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_sync:
-                sync();
+                new WikiSyncTask(this).execute(wiki);
                 return true;
             case R.id.menu_delete:
                 deleteRecursive(new File(localPath));
@@ -140,92 +119,6 @@ public class MainActivity extends ListActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void sync() {
-        new Thread(new Runnable() {
-            public void run() {
-                try {
-                    String message = "";
-                    final String message2;
-
-                    File localRepoDir = new File(localPath + "/.git");
-                    if (! localRepoDir.isDirectory()) {
-                        Git.cloneRepository().setURI(PreferenceManager.getDefaultSharedPreferences(context).getString("repository", "")).setDirectory(new File(localPath)).call();
-                    }
-
-                    localRepo = new FileRepository(localRepoDir);
-                    git = new Git(localRepo);
-
-                    if (localRepo.getRef("phone") == null) {
-                        git.checkout().setCreateBranch(true).setName("phone").call();
-                    } else {
-                        git.checkout().setName("phone").call();
-                    }
-
-                    git.add().addFilepattern(".").call();
-
-                    boolean needToPush = false;
-
-                    if (! git.status().call().isClean()) {
-                        git.commit().setMessage("Sync from RoboBoy").setAuthor(PreferenceManager.getDefaultSharedPreferences(context).getString("user_name", ""), PreferenceManager.getDefaultSharedPreferences(context).getString("user_email", "")).call();
-                        message += "Committed. ";
-                        needToPush = true;
-                    } else {
-                        message = "Clean. ";
-                    }
-
-                    if (isNetworkAvailable()) {
-                        git.fetch().call();
-                        ObjectId headBeforeMerge = localRepo.resolve("HEAD");
-                        MergeResult mergeResult = git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(localRepo.getRef("origin/master")).call();
-                        if (headBeforeMerge.equals(mergeResult.getNewHead())) {
-                            message += "Nothing new on server. ";
-                        } else {
-                            message += "Fetched. ";
-                        }
-                    }
-
-                    if (needToPush) {
-                        if (isNetworkAvailable()) {
-                            git.push().add("phone").call();
-                            message += "Pushed. ";
-                        } else {
-                            message += "No network. ";
-                        }
-                    }
-
-                    message2 = message;
-
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, message2, Toast.LENGTH_SHORT).show();
-                            listDir(new File(localPath));
-                        }
-                    });
-                } catch (CheckoutConflictException e) {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, "Sync: Conflict. Please merge on a real computer.", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                } catch (GitAPIException e) {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, "Sync: Git error", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, "Sync: IO error", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
-            }
-        }).start();
     }
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -263,5 +156,28 @@ public class MainActivity extends ListActivity {
             = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private class WikiSyncTask extends AsyncTask<Wiki, Integer, String> {
+        Context context;
+
+        public WikiSyncTask(Context context) {
+            this.context = context;
+        }
+
+        protected String doInBackground(Wiki... wikis) {
+            String message = "";
+            Wiki wiki = wikis[0];
+
+            return wiki.sync(true);
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+        }
+
+        protected void onPostExecute(String result) {
+            Toast.makeText(context, result, Toast.LENGTH_LONG).show();
+            listDir(new File(localPath));
+        }
     }
 }
