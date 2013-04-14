@@ -144,41 +144,12 @@ public class Wiki {
                     message += "No network. ";
                 }
             }
-
-            /*
-               runOnUiThread(new Runnable() {
-               public void run() {
-               Toast.makeText(context, message2, Toast.LENGTH_SHORT).show();
-               listDir(new File(directory));
-               }
-               });
-               */
         } catch (CheckoutConflictException e) {
-            /*
-               runOnUiThread(new Runnable() {
-               public void run() {
-               Toast.makeText(context, "Sync: Conflict. Please merge on a real computer.", Toast.LENGTH_LONG).show();
-               }
-               });
-               */
+            message += "Conflict. ";
         } catch (GitAPIException e) {
-            e.printStackTrace();
-            /*
-               runOnUiThread(new Runnable() {
-               public void run() {
-               Toast.makeText(context, "Sync: Git error", Toast.LENGTH_LONG).show();
-               }
-               });
-               */
+            message += "Git error. ";
         } catch (IOException e) {
-            e.printStackTrace();
-            /*
-               runOnUiThread(new Runnable() {
-               public void run() {
-               Toast.makeText(context, "Sync: IO error", Toast.LENGTH_LONG).show();
-               }
-               });
-               */
+            message += "IO error. ";
         }
 
         return message;
