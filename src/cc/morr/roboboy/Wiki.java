@@ -2,6 +2,7 @@ package cc.morr.roboboy;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.Iterator;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -10,6 +11,7 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
@@ -113,42 +115,52 @@ public class Wiki {
 
         try {
             git.add().addFilepattern(".").call();
+            int changedFiles = git.status().call().getChanged().size();
 
-            boolean needToPush = false;
-
-            if (! git.status().call().isClean()) {
+            if (changedFiles > 0) {
                 git.commit().setMessage("Sync from RoboBoy").setAuthor(authorName, authorEmail).call();
-                message += "Committed. ";
-                needToPush = true;
-            } else {
-                message = "Clean. ";
+                message += "Committed "+changedFiles+" file"+(changedFiles == 1 ? "" : "s")+". ";
             }
+
+            boolean diverged = false;
 
             if (isNetworkAvailable) {
                 git.fetch().call();
                 ObjectId headBeforeMerge = repository.resolve("HEAD");
                 MergeResult mergeResult = git.merge().setFastForward(MergeCommand.FastForwardMode.FF_ONLY).include(repository.getRef("origin/master")).call();
-                if (headBeforeMerge != null && headBeforeMerge.equals(mergeResult.getNewHead())) {
-                    message += "Nothing new on server. ";
-                } else {
-                    message += "Fetched. ";
-                }
-            }
 
-            if (isNetworkAvailable) {
+                if (!mergeResult.getMergeStatus().isSuccessful()) {
+                    message += "Master diverged. Please merge on a proper computer. ";
+                    diverged = true;
+                } else {
+                    Iterator<RevCommit> it = git.log().addRange(headBeforeMerge, mergeResult.getNewHead()).call().iterator();
+
+                    int newCommits = 0;
+                    while(it.hasNext()) {
+                        newCommits++;
+                        it.next();
+                    }
+
+                    if (newCommits > 0) {
+                        message += "Fetched "+newCommits+" commit"+(newCommits == 1 ? "" : "s")+". ";
+                    }
+                }
+
                 git.push().add("phone").call();
-                message += "Pushed. ";
+                if (message.equals("")) {
+                    message += "Synced.";
+                }
             } else {
-                message += "No network. ";
+                message += "No network.";
             }
         } catch (CheckoutConflictException e) {
-            message += "Conflict. ";
+            message += "Conflict.";
         } catch (GitAPIException e) {
-            message += "Git error. ";
+            message += "Git error.";
         } catch (IOException e) {
-            message += "IO error. ";
+            message += "IO error.";
         }
 
-        return message;
+        return message.trim();
     }
 }
