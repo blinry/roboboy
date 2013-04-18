@@ -18,7 +18,6 @@ import org.eclipse.jgit.util.FS;
 
 import com.jcraft.jsch.Session;
 
-
 public class Wiki {
     private String directory;
     private String authorName;

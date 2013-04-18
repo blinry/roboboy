@@ -8,8 +8,10 @@ import java.util.List;
 
 import android.app.ActionBar;
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -17,6 +19,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -30,8 +33,6 @@ import android.widget.SearchView;
 import android.widget.Toast;
 
 public class MainActivity extends ListActivity {
-    private Wiki wiki;
-
     private String localPath;
     private Context context;
 
@@ -46,13 +47,9 @@ public class MainActivity extends ListActivity {
         setContentView(R.layout.main);
         context = this;
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver, new IntentFilter("cc.morr.roboboy.RELOAD"));
 
         localPath = LOCAL_PATH;
-
-        wiki = new Wiki(localPath, pref.getString("user_name", ""), pref.getString("user_email", ""));
-        wiki.setKeyLocation(pref.getString("key_location", ""));
-        wiki.setRemoteURL(pref.getString("repository", ""));
 
         listDir(new File(localPath));
 
@@ -62,11 +59,18 @@ public class MainActivity extends ListActivity {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
 
+
         if (PreferenceManager.getDefaultSharedPreferences(context).getString("repository", "") == "") {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             finish();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(messageReceiver);
+        super.onDestroy();
     }
 
     @Override
@@ -94,7 +98,8 @@ public class MainActivity extends ListActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_sync:
-                new WikiSyncTask(this).execute(wiki);
+                Intent wikiServiceIntent = new Intent(this, WikiService.class);
+                startService(wikiServiceIntent);
                 return true;
             case R.id.menu_delete:
                 deleteRecursive(new File(localPath));
@@ -152,32 +157,15 @@ public class MainActivity extends ListActivity {
     }
 
     private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager 
-            = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    private class WikiSyncTask extends AsyncTask<Wiki, Integer, String> {
-        Context context;
-
-        public WikiSyncTask(Context context) {
-            this.context = context;
-        }
-
-        protected String doInBackground(Wiki... wikis) {
-            String message = "";
-            Wiki wiki = wikis[0];
-
-            return wiki.sync(true);
-        }
-
-        protected void onProgressUpdate(Integer... progress) {
-        }
-
-        protected void onPostExecute(String result) {
-            Toast.makeText(context, result, Toast.LENGTH_LONG).show();
+    private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
             listDir(new File(localPath));
         }
-    }
+    };
 }
