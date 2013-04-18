@@ -58,13 +58,6 @@ public class MainActivity extends ListActivity {
 
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
-
-
-        if (PreferenceManager.getDefaultSharedPreferences(context).getString("repository", "") == "") {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            finish();
-        }
     }
 
     @Override
