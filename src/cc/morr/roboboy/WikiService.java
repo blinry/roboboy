@@ -10,7 +10,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
 public class WikiService extends IntentService {
-    private Wiki wiki;
     private Handler handler;
     private Context context;
 
@@ -21,24 +20,18 @@ public class WikiService extends IntentService {
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-
+    protected void onHandleIntent(Intent intent) {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        wiki = new Wiki(MainActivity.LOCAL_PATH, pref.getString("user_name", ""), pref.getString("user_email", ""));
+        if (pref.getString("repository", "") == "") {
+            handler.post(new DisplayToast("Please specify a remote URL in the Settings"));
+            return;
+        }
+
+        Wiki wiki = new Wiki(MainActivity.LOCAL_PATH, pref.getString("user_name", ""), pref.getString("user_email", ""));
         wiki.setKeyLocation(pref.getString("key_location", ""));
         wiki.setRemoteURL(pref.getString("repository", ""));
-    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        //Toast.makeText(this, "intent!", Toast.LENGTH_SHORT).show();
         String message = wiki.sync(true);
         handler.post(new DisplayToast(message));
         Intent reloadIntent = new Intent();

@@ -135,13 +135,11 @@ public class Wiki {
                 }
             }
 
-            if (needToPush) {
-                if (isNetworkAvailable) {
-                    git.push().add("phone").call();
-                    message += "Pushed. ";
-                } else {
-                    message += "No network. ";
-                }
+            if (isNetworkAvailable) {
+                git.push().add("phone").call();
+                message += "Pushed. ";
+            } else {
+                message += "No network. ";
             }
         } catch (CheckoutConflictException e) {
             message += "Conflict. ";
