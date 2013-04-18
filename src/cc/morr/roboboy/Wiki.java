@@ -133,22 +133,26 @@ public class Wiki {
                     message += "Master diverged. Please merge on a proper computer. ";
                     diverged = true;
                 } else {
-                    Iterator<RevCommit> it = git.log().addRange(headBeforeMerge, mergeResult.getNewHead()).call().iterator();
+                    if (headBeforeMerge == null) {
+                        message += "Fetched for the first time.";
+                    } else {
+                        Iterator<RevCommit> it = git.log().addRange(headBeforeMerge, mergeResult.getNewHead()).call().iterator();
 
-                    int newCommits = 0;
-                    while(it.hasNext()) {
-                        newCommits++;
-                        it.next();
-                    }
+                        int newCommits = 0;
+                        while(it.hasNext()) {
+                            newCommits++;
+                            it.next();
+                        }
 
-                    if (newCommits > 0) {
-                        message += "Fetched "+newCommits+" commit"+(newCommits == 1 ? "" : "s")+". ";
+                        if (newCommits > 0) {
+                            message += "Fetched "+newCommits+" commit"+(newCommits == 1 ? "" : "s")+". ";
+                        }
                     }
                 }
 
                 git.push().add("phone").call();
                 if (message.equals("")) {
-                    message += "Synced.";
+                    message += "Everything up to date.";
                 }
             } else {
                 message += "No network.";
