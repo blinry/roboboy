@@ -14,19 +14,34 @@ Have a recent Android SDK, and `ant`. Clone this repo, connect your device, issu
 
     ant debug install
 
-SSH key Setup
--------------
+Setup
+-----
 
-This is still very hacky and probably won't work for everyone.
+Warning: This is still quite hacky. Enable developer access on your phone.
+
+You need a Git repository that can be accessed via SSH key authentication. I recommend [gitolite](http://gitolite.com/gitolite/) for managing those on your own server. For testing purposes, a public GitHub repository works as well.
 
 On your computer, generate a new SSH key pair with
 
     ssh-keygen -f phone -N ""
 
-Passphrases are not supported yet. Now, copy the key pair to your android device with
+Passphrases are not supported yet. Give the new key read/write permission to your repository. Now, copy the key pair to your android device with
 
     adb push phone /sdcard/.ssh/phone
     adb push phone.pub /sdcard/.ssh/phone.pub
+
+In RoboBoy's settings, specify the key's location, choose a name and email address for new commits, return to the main screen and sync away!
+
+Usage
+-----
+
+On my main computer, I use this script to sync and merge with the `phone` branch:
+
+    git add -A
+    git commit -m "Sync"
+
+    git fetch
+    git merge origin/phone && git push
 
 License
 -------
@@ -47,7 +62,9 @@ See LICENSE file for a copy of the GNU General Public License.
 Credits
 -------
 
-- Icon: [Tomboy](http://projects.gnome.org/tomboy/), Alex Graveley, LGPLv2.1
+- Images
+    - The RoboBoy logo is reproduced or modified from [work created and shared by Google](https://developer.android.com/distribute/googleplay/promote/brand.html) and used according to terms described in the Creative Commons 3.0 Attribution License.
 - Libraries
     - [jGit](http://www.eclipse.org/jgit/), jGit contributors, Eclipse Distribution License - v 1.0
     - [JSch](http://www.jcraft.com/jsch/), Atsuhiko Yamanaka, Modified BSD License
+    - [Android Support Library](https://developer.android.com/tools/extras/support-library.html), The Android Open source Project, Apache License, Version 2.0
