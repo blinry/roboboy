@@ -7,6 +7,8 @@ RoboBoy is a sister project of [Vimboy](https://github.com/blinry/vimboy),
 and serves exactly the same purpose: Managing a personal wiki of interlinked
 text files. It can synchronize with any Git server via Public Key Authentication.
 
+![Main activity](assets/screenshots/main.png) &nbsp; ![Page activity](assets/screenshots/page.png)
+
 Installation
 ------------
 
