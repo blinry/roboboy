@@ -73,6 +73,7 @@ public class MainActivity extends ListActivity {
 
         SearchView searchView = (SearchView)(menu.findItem(R.id.menu_search)).getActionView();
         searchView.setIconifiedByDefault(false);
+        searchView.requestFocus();
         searchView.setMaxWidth(500);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             public boolean onQueryTextChange(String newText) {
