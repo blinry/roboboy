@@ -72,9 +72,9 @@ public class MainActivity extends ListActivity {
         inflater.inflate(R.menu.main, menu);
 
         SearchView searchView = (SearchView)(menu.findItem(R.id.menu_search)).getActionView();
-        searchView.setIconifiedByDefault(false);
+        searchView.onActionViewExpanded();
         searchView.requestFocus();
-        searchView.setMaxWidth(500);
+        searchView.setMaxWidth(450);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             public boolean onQueryTextChange(String newText) {
                 ((ArrayAdapter)MainActivity.this.getListAdapter()).getFilter().filter(newText);
@@ -95,11 +95,11 @@ public class MainActivity extends ListActivity {
                 Intent wikiServiceIntent = new Intent(this, WikiService.class);
                 startService(wikiServiceIntent);
                 return true;
-            case R.id.menu_delete:
-                deleteRecursive(new File(localPath));
-                Toast.makeText(this, "Deleted local repository", Toast.LENGTH_SHORT).show();
-                listDir(new File(localPath));
-                return true;
+            //case R.id.menu_delete:
+            //    deleteRecursive(new File(localPath));
+            //    Toast.makeText(this, "Deleted local repository", Toast.LENGTH_SHORT).show();
+            //    listDir(new File(localPath));
+            //    return true;
             case R.id.menu_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);

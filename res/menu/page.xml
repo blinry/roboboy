@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/page_menu_save"
           android:title="@string/page_menu_save"
-          android:icon="@android:drawable/ic_menu_save"
+          android:icon="@drawable/ic_save_white_24dp"
           android:showAsAction="ifRoom"
           android:onClick="save"
           />

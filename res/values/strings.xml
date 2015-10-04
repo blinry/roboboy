@@ -5,7 +5,7 @@
     <string name="menu_sync">Sync</string>
     <string name="menu_delete">Delete repository</string>
     <string name="menu_settings">Settings</string>
-    <string name="menu_new">Add page</string>
+    <string name="menu_add">Add page</string>
 
     <string name="page_menu_save">Save</string>
 </resources>

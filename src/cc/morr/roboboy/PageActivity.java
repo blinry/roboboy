@@ -43,7 +43,6 @@ public class PageActivity extends Activity {
 
         editText = (EditText)findViewById(R.id.page_text);
         ScrollView scrollView = (ScrollView)findViewById(R.id.page_scroll_view);
-        scrollView.setSmoothScrollingEnabled(true);
 
         try {
             String text = readFile(filename);
